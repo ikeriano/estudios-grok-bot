@@ -1,0 +1,85 @@
+PASAPALABRA 3D - ESTUDIOS GROK BOT (recreación no oficial para jugar)
+=====================================================================
+
+CÓMO ABRIRLO
+- Doble clic en index.html (Chrome, Edge o Firefox).
+- O bien, desde esta carpeta:  python3 -m http.server 8000  y abre http://localhost:8000
+
+PLATÓS (arriba a la izquierda)
+  1. Antena 3 2000-2006        4. Antena 3 2020-2026
+  2. Telecinco 2007-2018 (cabecera 3D)   5. Rueda la letra, Telecinco 2026- (cabecera 3D)
+  3. Telecinco 2018-2019 (cabecera 3D)
+  + "Estudios Grok Bot": exterior, recepción y pasillo con una puerta por plató.
+    Haz CLIC en una puerta para entrar; en cada plató hay una puerta/portal de SALIDA
+    (clic) que te devuelve al pasillo. También hay botón "🏢 Estudios Grok Bot".
+
+CONTROLES
+- Arrastrar: girar · Rueda: zoom · Clic derecho: desplazar.
+- Botones de cámara abajo (cambian según el plató).
+- "🚶 Paseo (WASD)": primera persona. W A S D o flechas para moverte, arrastrar para
+  mirar, Mayús para correr. Vuelve a pulsarlo para salir.
+- "🎮 Jugar programa": partida completa de la época con sus pruebas y su final.
+- "📖 Modo historia": los presentadores virtuales cuentan la historia del programa
+  recorriendo los platós (bocadillos + voz sintetizada es-ES si el navegador la tiene).
+- Selector "Programa normal / Especial Navidad / Nochevieja / famosos / aniversario"
+  (en Telecinco 2007-2019 y Antena 3 2020-2026): decoración temática y famosos virtuales
+  ficticios en la partida.
+- "🎬 Ver cabecera", "Saltar", "🎵 Música y logo", brillo, ocultar interfaz.
+
+PRUEBAS POR ÉPOCA (según la historia del programa)
+  2000-2006: Una de dos, El pulsador, De par en par, Pirámides/La escalera,
+             Antes y después, La palabra imposible · Rosco 25 letras, 90 s + acumulado.
+  2007-2018 (hasta 7-sep-2018): Silla azul, Letra a letra, La pista musical, Coco loco,
+             ¿Qué es qué? · (o variante "primeros años" con las pruebas históricas) · Rosco 85 s.
+  2018-2019 (desde 10-sep-2018): Silla azul, Una de cuatro, La pista musical,
+             Sopa de letras, ¿Dónde están? · Rosco.
+  2020-2026: igual, con Sopa de letras hasta 4-dic-2023 y Palabras cruzadas desde el
+             5-dic-2023; Rosco hasta 18-jun-2026 y AlaZ (110 s) desde el 19-jun-2026.
+  Rueda la letra (equipos morado y azul, bote inicial 200.000 €): La oportunidad,
+             ¡He dicho!, Cantando espero, Con dos palabras, Palabras ocultas · La Rueda.
+  Premios: pleno = bote; si no, bote +6.000 € y 1.200 € al que más acierte. El bote de
+  cada época se guarda en el navegador.
+
+AMPLIAR LAS PREGUNTAS
+  - Sin recompilar: edita data/preguntas_extra.js (se AÑADE a lo existente).
+  - O edita src/data/preguntas.json y recompila (npm run build).
+  Todas las preguntas incluidas son originales de ejemplo.
+
+PONER TU PROPIA MÚSICA, SONIDOS Y LOGOS
+Si existe un archivo, se usa TAL CUAL. Si no, un sonido sintetizado sencillo de respaldo
+(sin melodías parecidas) y el texto/logo 3D procedural.
+
+  Forma 1 - Desde el juego: "🎵 Música y logo" -> en cada época "Subir música de
+    cabecera" y "Subir logo" (se guardan en el navegador, IndexedDB). "Quitar música" /
+    "Quitar logo" los borra. Lo subido tiene prioridad sobre las carpetas.
+
+  Forma 2 - Carpetas (audio: .mp3 .ogg .wav .m4a · imagen: .png .webp .jpg .svg)
+  audio/
+    cabecera_antena3_2000.mp3, cabecera_telecinco_2007.mp3, cabecera_telecinco_2018.mp3,
+    cabecera_telecinco.mp3 (vale para las dos de Telecinco), cabecera_antena3_2020.mp3,
+    cabecera_rueda_letra.mp3   -> cabecera de Rueda la letra
+    rosco.mp3, acierto.mp3, fallo.mp3, pasapalabra.mp3, aplausos.mp3
+  logos/
+    antena3_2000.png, telecinco_2007.png, telecinco_2018.png, telecinco.png,
+    antena3_2020.png, rueda_letra.png  (se muestran en las pantallas del plató y, en las
+    épocas con cabecera, sustituyen al texto final de la cabecera)
+
+  IMPORTANTE: usa solo archivos que tengas derecho a usar. El juego no incluye música,
+  sonidos ni logos originales de los programas ni de las cadenas. Las canciones de las
+  pruebas musicales son melodías de dominio público sintetizadas.
+
+PRESENTADORES VIRTUALES (personajes originales, sin parecido físico con personas reales)
+  Sofía Brisa (cercana y elegante), Don Ramiro (voz grave y aplomo), Nico Chispa
+  (dinámico y simpático), Toni Risas (bromista y enérgico), Dani Sonrisa (natural,
+  alegre y cercano), Aurelio Guasa (veterano, irónico y simpático, Rueda la letra).
+
+ESTRUCTURA (para programadores)
+  index.html / js/app.js       página y juego compilado
+  src/main.js                  interfaz, cámaras, paseo, clics, cabeceras, bucle
+  src/etapas/*.js              un archivo por plató (+ estudios.js = hub, _base.js)
+  src/cabeceras/telecinco.js   cabecera Telecinco (~15 s) · rueda.js (~10 s)
+  src/lib/kit.js               piezas 3D reutilizables (LED, gradas, roscos, atriles...)
+  src/lib/especiales.js        decoración de programas especiales y famosos ficticios
+  src/juego/                   motor, pruebas, finales (rosco/AlaZ/La Rueda) e historia
+  tools/                       capturas, vídeo y prueba automática (node tools/test_juego.mjs)
+  Recompilar tras cambiar src/:  npm install  &&  npm run build
