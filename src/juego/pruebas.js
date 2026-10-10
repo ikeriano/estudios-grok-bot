@@ -43,13 +43,13 @@ async function resumen(G, ui, titulo, txt) {
 export const PRUEBAS = {
   silla_azul: { nombre: 'Silla azul', async jugar(G, ui) {
     const qs = baraja(banco('silla_azul')); let fH = 0, fR = 0, i = 0;
-    let cont = ui.pantalla(`<p class="j-reglas">No suma segundos. Eres el aspirante: eliges entre dos letras y respondes. Tu rival (el que perdió la final anterior) responde también. Quien falle dos preguntas abandona el concurso.</p>`); ui.cabecera(G, 'Silla azul'); await ui.continuar(cont, 'Empezar ▸');
+    let cont = ui.pantalla(`<p class="j-reglas">No suma segundos. Eres el aspirante: eliges entre dos letras y respondes. Tu rival (el que perdió la final anterior) responde también. Tienes 5 segundos por pregunta. Quien falle dos preguntas abandona el concurso.</p>`); ui.cabecera(G, 'Silla azul'); await ui.continuar(cont, 'Empezar ▸');
     while (fH < 2 && fR < 2 && i < qs.length * 2) {
       const q = qs[i % qs.length]; i++;
       cont = ui.pantalla(`<div class="j-def">Elige letra:</div><div class="j-opc">${q.letras.map(l => `<button data-v="${l}">${l}</button>`).join('')}</div><div class="j-sub">Fallos: tú ${fH} · rival ${fR}</div>`); ui.cabecera(G, 'Silla azul');
       const L = await ui.clic(cont); const otra = q.letras.find(x => x !== L);
       cont = ui.pantalla(`<div class="j-def">${esc(q[L].p)}</div>`); ui.cabecera(G, 'Silla azul'); habla(q[L].p);
-      const reloj = new Reloj(10, v => ui.setReloj(v)).start();
+      const reloj = new Reloj(5, v => ui.setReloj(v)).start();
       const r = await ui.respuesta(cont, { pasa: null }, [reloj.fin]); reloj.stop();
       if (r !== 'TIEMPO' && esCorrecta(r, q[L].r)) { sonido('acierto'); await ui.aviso(cont, '✅ Correcto', 700); } else { fH++; sonido('fallo'); await ui.aviso(cont, `❌ Era <b>${esc(q[L].r.split('|')[0])}</b>`, 1200); }
       if (fH >= 2) break;
@@ -60,7 +60,7 @@ export const PRUEBAS = {
   } },
 
   una_de_cuatro: { nombre: 'Una de cuatro', async jugar(G, ui) { await opciones(G, ui, 'Una de cuatro', banco('una_de_cuatro'), 90, 2, 'Pregunta con cuatro opciones. Durante 90 segundos, cada acierto suma 2 segundos; si fallas, el turno pasa al compañero.'); } },
-  una_de_dos: { nombre: 'Una de dos', async jugar(G, ui) { await opciones(G, ui, 'Una de dos', banco('una_de_dos'), 60, 1, 'Por cada pregunta, elige entre dos opciones. (El texto de referencia no fija tiempo ni segundos exactos: aquí 60 s y 1 s por acierto.)'); } },
+  una_de_dos: { nombre: 'Una de dos', async jugar(G, ui) { await opciones(G, ui, 'Una de dos', banco('una_de_dos'), 90, 5, 'Por cada pregunta, elige entre dos opciones. 90 segundos; cada acierto suma 5 segundos; si fallas, el turno pasa al compañero.'); } },
 
   piramides: { nombre: 'Pirámides (La escalera)', async jugar(G, ui) {
     const items = banco('piramides').flatMap(p => p.palabras.map((w, i) => ({ def: `${p.defs[i]} — empieza por ${w[0].toUpperCase()} (${w.length} letras)`, r: w })));
@@ -195,10 +195,10 @@ export const PRUEBAS = {
 
   donde_estan: { nombre: '¿Dónde están?', async jugar(G, ui) {
     const temas = baraja(banco('donde_estan')).slice(0, 2);
-    let cont = ui.pantalla(`<p class="j-reglas">Elige tema. Prueba de memoria: 9 casillas numeradas con 9 palabras. Recuerda dónde está cada una. Si fallas, todo se oculta y el turno pasa al compañero. 20 s si completas (10 si ambos), 10 s al que más destape, 5 s cada uno si empate.</p><div class="j-opc">${temas.map((t, i) => `<button data-v="${i}">${esc(t.tema)}</button>`).join('')}</div>`); ui.cabecera(G, '¿Dónde están?');
+    let cont = ui.pantalla(`<p class="j-reglas">Elige tema. Prueba de memoria: 9 casillas numeradas con 9 palabras. Recuerda dónde está cada una. 75 segundos por equipo. Si fallas, todo se oculta y el turno pasa al compañero. 20 s si completas el panel (10 cada uno si ambos), 10 s al que más destape sin completar, 5 s cada uno si empatan, 0 si nadie acierta.</p><div class="j-opc">${temas.map((t, i) => `<button data-v="${i}">${esc(t.tema)}</button>`).join('')}</div>`); ui.cabecera(G, '¿Dónde están?');
     const t = temas[+await ui.clic(cont)]; const pal = baraja(t.palabras);
     cont = ui.pantalla(`<div class="j-def">Memoriza (8 s)</div><div class="j-grid9">${pal.map((w, i) => `<div><small>${i + 1}</small>${esc(w)}</div>`).join('')}</div>`); ui.cabecera(G, '¿Dónde están?'); await espera(8000);
-    const reloj = new Reloj(60, v => ui.setReloj(v)).start(); let dest = new Set(), mejor = 0;
+    const reloj = new Reloj(75, v => ui.setReloj(v)).start(); let dest = new Set(), mejor = 0;
     const orden = baraja(pal.map((w, i) => i));
     let k = 0;
     while (dest.size < 9 && !reloj.terminado) {

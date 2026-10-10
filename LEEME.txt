@@ -37,6 +37,10 @@ PRUEBAS POR ÉPOCA (según la historia del programa)
              5-dic-2023; Rosco hasta 18-jun-2026 y AlaZ (110 s) desde el 19-jun-2026.
   Rueda la letra (equipos morado y azul, bote inicial 200.000 €): La oportunidad,
              ¡He dicho!, Cantando espero, Con dos palabras, Palabras ocultas · La Rueda.
+  Tiempos ajustados: Silla azul 5 s por pregunta (eliminación con dos fallos);
+  Una de dos 90 s y +5 s por acierto; ¿Dónde están? 75 s por equipo (20 s si se completa
+  el panel, 10 s al que más acierte sin completarlo, 5/5 si empatan, 10/10 si ambos lo
+  completan, 0 si nadie acierta).
   Premios: pleno = bote; si no, bote +6.000 € y 1.200 € al que más acierte. El bote de
   cada época se guarda en el navegador.
 
