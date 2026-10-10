@@ -1,6 +1,7 @@
 // Utilidades del motor de juego (interfaz 2D sobre el plató 3D)
 import { sfx, audioCtx, synth } from '../lib/media.js';
 import BASE from '../data/preguntas.json';
+import { hud } from './grafismos.js';
 
 export function banco(nombre) {
   const extra = (window.PREGUNTAS_EXTRA && window.PREGUNTAS_EXTRA[nombre]) || [];
@@ -46,7 +47,7 @@ export class Reloj {
 export class UI {
   constructor(el) { this.el = el; }
   abrir() { this.el.classList.add('abierto'); }
-  cerrar() { this.el.classList.remove('abierto'); this.el.innerHTML = ''; }
+  cerrar() { this.el.classList.remove('abierto'); this.el.innerHTML = ''; hud().limpiar(); }
   pantalla(html) { this.el.innerHTML = `<div class="j-cab"></div><div class="j-cuerpo">${html}</div>`; this.abrir(); return this.el.querySelector('.j-cuerpo'); }
   cabecera(G, titulo, reloj = null) {
     const c = this.el.querySelector('.j-cab'); if (!c) return;

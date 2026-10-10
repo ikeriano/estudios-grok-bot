@@ -12,6 +12,8 @@ import { jugarPrograma, FORMATOS } from './juego/juego.js';
 import { PRUEBAS } from './juego/pruebas.js';
 import { jugarFinal } from './juego/final.js';
 import { UI } from './juego/motor.js';
+import { hud, HUD_CSS, estiloDe } from './juego/grafismos.js';
+{ const st = document.createElement('style'); st.textContent = HUD_CSS; document.head.appendChild(st); }
 import { jugarHistoria } from './juego/historia.js';
 import { recursoEpoca, guardarSubido, quitarSubido, sfx, audioCtx, findAudioFile } from './lib/media.js';
 import { programarAudioRespaldo } from './cabeceras/telecinco.js';
@@ -301,7 +303,7 @@ if (params.get('especial')) { ctx.especial = params.get('especial'); cargarEtapa
 if (params.get('cam')) irACamara(params.get('cam'), true);
 if (params.has('rosco')) etapa.rosco.toggle();
 $('cargando').remove();
-window.__juego = { PRUEBAS, jugarFinal, UI, FORMATOS }; // para pruebas automáticas
+window.__juego = { PRUEBAS, jugarFinal, UI, FORMATOS, hud, estiloDe }; // para pruebas automáticas
 window.__audioRespaldoWav = async (secs = 16.5, id = 'telecinco-2007') => { // exporta la banda de respaldo a WAV (para el MP4)
   const sr = 44100, oc = new OfflineAudioContext(2, sr * secs, sr);
   const cabDef = (ETAPAS.find(e => e.id === id) || {}).cabecera;

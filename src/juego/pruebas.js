@@ -1,6 +1,7 @@
 // Pruebas acumulativas de segundos. Cada prueba: async (G, ui) => void (suma segundos en G.equipos)
 // Reglas y segundos según el texto de referencia (Wikipedia) aportado por el usuario.
 import { banco, esCorrecta, espera, azar, baraja, esc, Reloj, habla, sonido, tocaMelodia } from './motor.js';
+import { hud } from './grafismos.js';
 
 const H = 0, R = 1; // índice equipo humano / rival
 const rival = (p = 0.55) => Math.random() < p;
@@ -22,7 +23,7 @@ async function listaDefiniciones(G, ui, { titulo, reglas, items, seg, pts, fallo
   let cola = items.slice(0, maxItems).map((x, i) => ({ ...x, i })), aciertos = 0, total = cola.length;
   while (cola.length && !reloj.terminado) {
     const it = cola[0];
-    cont = ui.pantalla(`${extraHtml(it)}<div class="j-def">${esc(it.def)}</div><div class="j-sub">${aciertos}/${total} aciertos</div>`); ui.cabecera(G, titulo, reloj.rest);
+    cont = ui.pantalla(`${extraHtml(it)}<div class="j-def">${esc(it.def)}</div><div class="j-sub">${aciertos}/${total} aciertos</div>`); ui.cabecera(G, titulo, reloj.rest); hud().rotulo(G, it.def, { titulo });
     habla(it.def);
     const r = await ui.respuesta(cont, {}, [reloj.fin]);
     if (r === 'TIEMPO' || r === 'STOP') break;
@@ -100,10 +101,12 @@ export const PRUEBAS = {
       for (let k = 0; k < 5 && !resuelto; k++) {
         const pts = 5 - k;
         cont = ui.pantalla(`<div class="j-def">Pista ${k + 1} (${pts} s): ${esc(it.pistas[k])}</div><div class="j-opc"><button data-v="buzz" class="buzz">🔴 ¡Pulsar!</button><button data-v="no">Esperar pista</button></div>`); ui.cabecera(G, 'La pista musical');
-        if ([0, 2, 4].includes(k)) tocaMelodia(it.notas, { n: [5, 9, 99][k / 2] });
+        const suena = [0, 2, 4].includes(k); if (suena) tocaMelodia(it.notas, { n: [5, 9, 99][k / 2] });
+        hud().duelo(G, { texto: it.pistas[k], pista: pts, ecualizador: suena });
         const cpuT = espera(2500 + Math.random() * 4000).then(() => 'CPU');
         const quiere = Math.random() < 0.15 + k * 0.17;
         const r = await ui.clic(cont, '[data-v]', quiere ? [cpuT] : []);
+        if (r === 'CPU' || r === 'buzz') hud().duelo(G, { texto: it.pistas[k], pista: pts, activo: r === 'buzz' ? 0 : 1 });
         if (r === 'CPU') { const ok = rival(0.6); await ui.aviso(cont, `El rival pulsa... ${ok ? '✅ acierta: ' + esc(it.titulo) : '❌ falla'}`, 1400); if (ok) { sumar(G, R, pts); resuelto = true; } else { const a = await respondeHumano(ui, cont, it.acepta, 8); if (a) { sumar(G, H, pts); resuelto = true; } } }
         else if (r === 'buzz') { const a = await respondeHumano(ui, cont, it.acepta, 8); if (a) { sumar(G, H, pts); resuelto = true; } else if (rival(0.5)) { sumar(G, R, pts); resuelto = true; await ui.aviso(cont, `Rebote: el rival acierta (${esc(it.titulo)})`, 1300); } }
       }
@@ -197,13 +200,15 @@ export const PRUEBAS = {
     const temas = baraja(banco('donde_estan')).slice(0, 2);
     let cont = ui.pantalla(`<p class="j-reglas">Elige tema. Prueba de memoria: 9 casillas numeradas con 9 palabras. Recuerda dónde está cada una. 75 segundos por equipo. Si fallas, todo se oculta y el turno pasa al compañero. 20 s si completas el panel (10 cada uno si ambos), 10 s al que más destape sin completar, 5 s cada uno si empatan, 0 si nadie acierta.</p><div class="j-opc">${temas.map((t, i) => `<button data-v="${i}">${esc(t.tema)}</button>`).join('')}</div>`); ui.cabecera(G, '¿Dónde están?');
     const t = temas[+await ui.clic(cont)]; const pal = baraja(t.palabras);
-    cont = ui.pantalla(`<div class="j-def">Memoriza (8 s)</div><div class="j-grid9">${pal.map((w, i) => `<div><small>${i + 1}</small>${esc(w)}</div>`).join('')}</div>`); ui.cabecera(G, '¿Dónde están?'); await espera(8000);
-    const reloj = new Reloj(75, v => ui.setReloj(v)).start(); let dest = new Set(), mejor = 0;
+    cont = ui.pantalla(`<div class="j-def">Memoriza (8 s)</div><div class="j-grid9">${pal.map((w, i) => `<div><small>${i + 1}</small>${esc(w)}</div>`).join('')}</div>`); ui.cabecera(G, '¿Dónde están?');
+    hud().capsulas(pal, new Set(pal.map((_, i) => i)), null, { titulo: t.tema }); await espera(8000);
+    const reloj = new Reloj(75, v => { ui.setReloj(v); hud().tiempoCaps(v); }).start(); let dest = new Set(), mejor = 0;
     const orden = baraja(pal.map((w, i) => i));
     let k = 0;
     while (dest.size < 9 && !reloj.terminado) {
       const objetivo = orden[k % 9]; if (dest.has(objetivo)) { k++; continue; }
       cont = ui.pantalla(`<div class="j-def">¿Dónde está <b>${esc(pal[objetivo])}</b>?</div><div class="j-grid9">${pal.map((w, i) => dest.has(i) ? `<div class="ok"><small>${i + 1}</small>${esc(w)}</div>` : `<button data-v="${i}"><small>${i + 1}</small>?</button>`).join('')}</div>`); ui.cabecera(G, '¿Dónde están?', reloj.rest);
+      hud().capsulas(pal, dest, reloj.rest, { titulo: `¿Dónde está ${pal[objetivo]}?` });
       const v = await ui.clic(cont, '[data-v]', [reloj.fin]); if (v === 'TIEMPO') break;
       if (+v === objetivo) { dest.add(objetivo); mejor = Math.max(mejor, dest.size); sonido('acierto'); k++; } else { sonido('fallo'); await ui.aviso(cont, '❌ Se oculta todo · turno al compañero', 1000); dest = new Set(); k++; }
     }
@@ -251,11 +256,12 @@ export const PRUEBAS = {
     let prioridad = G.equipos[H].seg >= G.equipos[R].seg ? H : R;
     for (const it of temas) {
       cont = ui.pantalla(`<div class="j-def">🎵 Suena el tema... (${prioridad === H ? 'tienes 5 s exclusivos' : '5 s exclusivos del rival'})</div><div class="j-opc"><button data-v="buzz" class="buzz">🔴 ¡Pulsar!</button></div>`); ui.cabecera(G, 'Cantando espero', 15);
-      tocaMelodia(it.notas);
-      const reloj = new Reloj(15, v => ui.setReloj(v)).start();
+      tocaMelodia(it.notas); hud().duelo(G, { texto: '🎵 Cantando espero', pista: 15, ecualizador: true });
+      const reloj = new Reloj(15, v => { ui.setReloj(v); const p = document.querySelector('.hud-pista span'); if (p) p.textContent = Math.ceil(v); }).start();
       const tCPU = (prioridad === R ? 1500 : 5200) + Math.random() * 6000;
       const r = await ui.clic(cont, '[data-v]', [espera(tCPU).then(() => 'CPU'), reloj.fin]);
       const humanoPuede = prioridad === H || (15 - reloj.rest) >= 5;
+      if (r === 'buzz' || r === 'CPU') hud().duelo(G, { texto: '🎵 Cantando espero', pista: Math.ceil(reloj.rest), activo: r === 'buzz' ? 0 : 1 });
       reloj.stop();
       if (r === 'buzz' && humanoPuede) { const ok = await respondeHumano(ui, cont, it.acepta, 8); if (ok) sumar(G, H, 5); else if (rival(0.5)) { sumar(G, R, 5); await ui.aviso(cont, `Rebote: acierta el rival («${esc(it.titulo)}»)`, 1200); } }
       else if (r === 'buzz') { await ui.aviso(cont, 'Aún no puedes pulsar (5 s exclusivos del rival)', 1000); if (rival(0.6)) { sumar(G, R, 5); await ui.aviso(cont, `El rival acierta («${esc(it.titulo)}»)`, 1100); } }
@@ -306,7 +312,7 @@ async function opciones(G, ui, titulo, items, seg, pts, reglas) {
   const reloj = new Reloj(seg, v => ui.setReloj(v)).start(); let ac = 0, n = 0;
   for (const q of baraja(items)) {
     if (reloj.terminado) break; n++;
-    cont = ui.pantalla(`<div class="j-def">${esc(q.p)}</div><div class="j-opc">${q.op.map((o, i) => `<button data-v="${i}">${'ABCD'[i]}. ${esc(o)}</button>`).join('')}</div>`); ui.cabecera(G, titulo, reloj.rest); habla(q.p);
+    cont = ui.pantalla(`<div class="j-def">${esc(q.p)}</div><div class="j-opc">${q.op.map((o, i) => `<button data-v="${i}">${'ABCD'[i]}. ${esc(o)}</button>`).join('')}</div>`); ui.cabecera(G, titulo, reloj.rest); hud().rotulo(G, q.p, { titulo }); habla(q.p);
     const v = await ui.clic(cont, '[data-v]', [reloj.fin]); if (v === 'TIEMPO') break;
     if (+v === q.r) { ac++; sumar(G, H, pts); sonido('acierto'); await ui.aviso(cont, `✅ +${pts} s`, 500); } else { sonido('fallo'); await ui.aviso(cont, `❌ Era ${esc(q.op[q.r])} · turno al compañero`, 1000); }
   }
@@ -323,7 +329,9 @@ async function respondeHumano(ui, cont, acepta, seg) {
 }
 async function duelo(G, ui, titulo, def, r, pts) {
   const cont = ui.pantalla(`<div class="j-def">${esc(def)}</div><div class="j-opc"><button data-v="buzz" class="buzz">🔴 ¡Pulsar!</button></div>`); ui.cabecera(G, titulo); habla(def);
+  hud().duelo(G, { texto: def });
   const v = await ui.clic(cont, '[data-v]', [espera(2500 + Math.random() * 5000).then(() => 'CPU')]);
+  hud().duelo(G, { texto: def, activo: v === 'buzz' ? 0 : 1 });
   if (v === 'buzz') { const ok = await respondeHumano(ui, cont, r, 7); if (ok) sumar(G, H, pts); else if (rival(0.6)) { sumar(G, R, pts); await ui.aviso(cont, 'Rebote: el rival acierta', 900); } }
   else { if (rival(0.6)) { sumar(G, R, pts); await ui.aviso(cont, `El rival pulsa y acierta: ${esc(r.split('|')[0])}`, 1100); } else { await ui.aviso(cont, 'El rival falla: ¡rebote!', 700); const ok = await respondeHumano(ui, cont, r, 7); if (ok) sumar(G, H, pts); } }
 }

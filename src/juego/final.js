@@ -1,5 +1,6 @@
 // Prueba final: El rosco / AlaZ / La Rueda (25 definiciones, dos concursantes por turnos)
 import { banco, esCorrecta, espera, esc, Reloj, habla, sonido } from './motor.js';
+import { hud } from './grafismos.js';
 
 function svgRosco(items, estados, cur, color) {
   const n = items.length, R = 92;
@@ -33,13 +34,13 @@ export async function jugarFinal(G, ui, { tipo = 'rosco', base = 85, nombre = 'E
   let turno = empiezaH ? 'H' : 'R';
   const pinta = (msg = '') => {
     cont = ui.pantalla(`<div class="j-final"><div><h4>Tú · ${Math.ceil(est.H.t)} s</h4>${svgRosco(est.H.set, est.H.e, turno === 'H' ? est.H.i : -1, '#ff7a00')}</div><div class="j-fcentro">${msg}</div><div><h4>Rival · ${Math.ceil(est.R.t)} s</h4>${svgRosco(est.R.set, est.R.e, turno === 'R' ? est.R.i : -1, '#2a5cff')}</div></div>`);
-    ui.cabecera(G, nombre); return cont.querySelector('.j-fcentro');
+    ui.cabecera(G, nombre); hud().rosco(G, est, turno); return cont.querySelector('.j-fcentro');
   };
   while ((est.H.t > 0 && pendiente(est.H)) || (est.R.t > 0 && pendiente(est.R))) {
     if (turno === 'H' && (est.H.t <= 0 || !pendiente(est.H))) turno = 'R';
     if (turno === 'R' && (est.R.t <= 0 || !pendiente(est.R))) { if (est.H.t > 0 && pendiente(est.H)) turno = 'H'; else break; }
     if (turno === 'H') {
-      const reloj = new Reloj(est.H.t, v => { est.H.t = v; const h = cont.querySelector('h4'); if (h) h.textContent = `Tú · ${Math.ceil(v)} s`; }).start();
+      const reloj = new Reloj(est.H.t, v => { est.H.t = v; const h = cont.querySelector('h4'); if (h) h.textContent = `Tú · ${Math.ceil(v)} s`; hud().tiempoRosco(0, v); }).start();
       let seguir = true;
       while (seguir && sig(est.H) && !reloj.terminado) {
         const [L, modo, def, r] = est.H.set[est.H.i];
@@ -80,7 +81,7 @@ export async function jugarFinal(G, ui, { tipo = 'rosco', base = 85, nombre = 'E
     else if (aH === aR && fH === fR) { G.ganado += 600; msg = `Empate total: 600 € para cada uno y seguís los dos. Bote: ${G.bote.toLocaleString('es-ES')} €`; }
     else msg = `Gana el rival. Mañana tendrías tu oportunidad en ${tipo === 'rueda' ? 'La oportunidad' : 'la silla azul'}. Bote: ${G.bote.toLocaleString('es-ES')} €`;
   }
-  sonido('aplausos');
+  sonido('aplausos'); hud().limpiar();
   cont = ui.pantalla(`<div class="j-def">Tú: ${aH} aciertos, ${fH} fallos · Rival: ${aR} aciertos, ${fR} fallos</div><div class="j-def grande">${msg}</div>`); ui.cabecera(G, nombre);
   await ui.continuar(cont, 'Terminar');
 }

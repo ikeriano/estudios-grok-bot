@@ -3,6 +3,7 @@ import { UI, esc, setVoz } from './motor.js';
 import { PRUEBAS } from './pruebas.js';
 import { jugarFinal } from './final.js';
 import { ESPECIALES, FAMOSOS_FICTICIOS } from '../lib/especiales.js';
+import { hud, estiloDe } from './grafismos.js';
 
 // Pruebas por época y fecha (según el texto de referencia)
 export const FORMATOS = {
@@ -57,16 +58,18 @@ export async function jugarPrograma(el, etapaDef, { onCamara, especial = 'normal
   cont = ui.pantalla(`<div class="j-def">${especial !== 'normal' ? `<b>${esc(ESPECIALES[especial].nombre)}</b><br>` : ''}Equipo ${esc(G.equipos[0].nombre)} (tú) con ${esc(famosos[0])} y ${esc(famosos[1])}<br>Equipo ${esc(G.equipos[1].nombre)} con ${esc(famosos[2])} y ${esc(famosos[3])}</div>
     <p class="j-sub">Famosos virtuales ficticios. Bote actual: <b>${G.bote.toLocaleString('es-ES')} €</b></p>
     <p>Pruebas: ${variante.pruebas.map(p => esc(PRUEBAS[p].nombre)).join(' · ')} · Final: ${esc(variante.final.nombre)}</p>`);
-  ui.cabecera(G, 'Programa');
+  ui.cabecera(G, 'Programa'); hud().set(estiloDe(etapaDef.id)); G.estilo = estiloDe(etapaDef.id);
   await ui.continuar(cont, '¡Empezamos! ▸');
+  await hud().bote(G.bote); hud().limpiar();
   onCamara && onCamara('mesa');
   for (const p of variante.pruebas) {
     cont = ui.pantalla(`<div class="j-def grande">${esc(PRUEBAS[p].nombre)}</div>`); ui.cabecera(G, PRUEBAS[p].nombre);
     await ui.continuar(cont, 'Jugar ▸');
-    await PRUEBAS[p].jugar(G, ui);
+    await PRUEBAS[p].jugar(G, ui); hud().limpiar();
   }
   onCamara && onCamara('atril');
-  await jugarFinal(G, ui, variante.final);
+  await hud().bote(G.bote); hud().limpiar();
+  await jugarFinal(G, ui, variante.final); hud().limpiar();
   localStorage.setItem(boteKey(etapaDef.id), String(G.bote));
   cont = ui.pantalla(`<div class="j-def grande">Fin del programa</div><p>Has ganado hoy: <b>${G.ganado.toLocaleString('es-ES')} €</b>. Bote para el próximo programa: <b>${G.bote.toLocaleString('es-ES')} €</b>.</p>`); ui.cabecera(G, 'Resultado');
   await ui.continuar(cont, 'Cerrar');
